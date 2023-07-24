@@ -7,6 +7,7 @@ const FacialRecognitionComponent = () => {
   const [imageUrls, setImageUrls] = useState([]);
   const [matricNumber, setMatricNumber] = useState('');
   const [isMatchFound, setIsMatchFound] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const videoRef = useRef(null);
 
   useEffect(() => {
@@ -24,16 +25,20 @@ const FacialRecognitionComponent = () => {
 
   const fetchImageArray = async () => {
     try {
+      setIsLoading(true);
       const response = await axios.post('https://pleasant-tie-deer.cyclic.app/api/v1/test/faceverify', { matric_number: matricNumber });
       setImageUrls(response.data.images);
       console.log(response.data.images);
+      setIsLoading(false);
     } catch (error) {
       console.error('Error fetching images:', error);
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     // Load the Face-API.js models
+    setIsLoading(true);
     Promise.all([
       faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
       faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
@@ -43,6 +48,7 @@ const FacialRecognitionComponent = () => {
       if (matricNumber !== '') {
         fetchImageArray();
       }
+      setIsLoading(false);
     });
   }, [matricNumber]);
 
@@ -132,7 +138,9 @@ const FacialRecognitionComponent = () => {
       </form>
 
       {/* Display match result */}
-      {isMatchFound ? (
+      {isLoading ? (
+        <div style={{ marginTop: '16px', color: 'gray' }}>Loading...</div>
+      ) : isMatchFound ? (
         <div style={{ marginTop: '16px', color: 'green' }}>Face Match Found!</div>
       ) : (
         <div style={{ marginTop: '16px', color: 'red' }}>No Face Match Found</div>
